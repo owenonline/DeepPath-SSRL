@@ -16,6 +16,7 @@ relation = sys.argv[1]
 # episodes = int(sys.argv[2])
 graphpath = dataPath + 'tasks/' + relation + '/' + 'graph.txt'
 relationPath = dataPath + 'tasks/' + relation + '/' + 'train_pos'
+loss = tf.keras.losses.CategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
 
 class SupervisedPolicy(object):
 	"""docstring for SupervisedPolicy"""
@@ -29,7 +30,9 @@ class SupervisedPolicy(object):
 			action_mask = tf.cast(tf.one_hot(self.action, depth = action_space), tf.bool)
 			self.picked_action_prob = tf.boolean_mask(self.action_prob, action_mask)
 
-			self.loss = tf.reduce_sum(-tf.log(self.picked_action_prob)) + sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES, scope = 'supervised_policy'))
+			self.correct = tf.placeholder(tf.float32, [None], 'correct')
+			self.predicted = tf.placeholder(tf.float32, [None], 'predicted')
+			self.loss = loss(self.correct, self.predicted)
 			self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate)
 			self.train_op = self.optimizer.minimize(self.loss)
 
@@ -37,10 +40,23 @@ class SupervisedPolicy(object):
 		sess = sess or tf.get_default_session()
 		return sess.run(self.action_prob, {self.state: state})
 
-	def update(self, state, action, sess = None):
+	def update(self, correct, predicted, sess = None):
 		sess = sess or tf.get_default_session()
-		_, loss = sess.run([self.train_op, self.loss], {self.state: state, self.action: action})
+		_, loss = sess.run([self.train_op, self.loss], {self.correct: correct, self.predicted: predicted})
 		return loss
+
+def label_gen(e1, e2, num_paths, env, path = None):
+    raise NotImplementedError
+
+def normalize_probs(probs):
+	probs = tf.cast(probs, dtype=tf.float32)
+	probs = tf.divide(tf.subtract(probs, tf.reduce_min(probs)), tf.subtract(tf.reduce_max(probs), tf.reduce_min(probs)))
+
+	# if a row in scores is all 0s, change it to a very small nonzero value instead so cce can't produce nans
+	if tf.math.reduce_min(tf.math.count_nonzero(probs, axis=1)).numpy() == 0:
+		probs = probs + tf.fill(tf.shape(probs), 0.0001)
+
+	return probs
 
 def train():
 	tf.reset_default_graph()
@@ -49,9 +65,19 @@ def train():
 	print("relation path: {}".format(relationPath))
 	print("graph path: {}".format(graphpath))
 
+	# get relations
 	f = open(relationPath)
 	train_data = f.readlines()
 	f.close()
+
+	# get knowledge graph
+	f = open(graphpath)
+	content = f.readlines()
+	f.close()
+	kb = KB()
+	for line in content:
+		ent1, rel, ent2 = line.rsplit()
+		kb.addRelation(ent1, rel, ent2)
 
 	num_samples = len(train_data)
 
@@ -71,65 +97,48 @@ def train():
 			sample = train_data[episode%num_samples].split()
 
 			try:
-				good_episodes = teacher(sample[0], sample[1], 5, env, graphpath)
+				correct_path = label_gen(sample[0], sample[1], kb, env)
 			except Exception as e:
 				print('Cannot find a path')
 				continue
 
-			for item in good_episodes:
-				state_batch = []
-				action_batch = []
-				for t, transition in enumerate(item):
-					state_batch.append(transition.state)
-					action_batch.append(transition.action)
-				state_batch = np.squeeze(state_batch)
-				state_batch = np.reshape(state_batch, [-1, state_dim])
-				policy_nn.update(state_batch, action_batch)
-
-		saver.save(sess, 'models/policy_supervised_' + relation)
-		print('Model saved')
-
-
-def test(test_episodes):
-	tf.reset_default_graph()
-	policy_nn = SupervisedPolicy()
-
-	f = open(relationPath)
-	test_data = f.readlines()
-	f.close()
-
-	test_num = len(test_data)
-
-	test_data = test_data[-test_episodes:]
-	print(len(test_data))
-	
-	success = 0
-
-	saver = tf.train.Saver()
-	with tf.Session() as sess:
-		saver.restore(sess, 'models/policy_supervised_'+ relation)
-		print('Model reloaded')
-		for episode in range(len(test_data)):
-			print('Test sample %d: %s' % (episode,test_data[episode][:-1]))
-			env = Env(dataPath, test_data[episode])
-			sample = test_data[episode].split()
 			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
 			for t in count():
 				state_vec = env.idx_state(state_idx)
 				action_probs = policy_nn.predict(state_vec)
 				action_chosen = np.random.choice(np.arange(action_space), p = np.squeeze(action_probs))
-				reward, new_state, done = env.interact(state_idx, action_chosen)
-				if done or t == max_steps_test:
+
+				# supervised learning magic
+				normalized_action_probs = normalize_probs(action_probs)
+				active_length = normalized_action_probs.shape[0]
+				choices = normalized_action_probs.shape[1]
+
+				correct = np.full((active_length,choices),0)
+
+				for batch_num in range(len(correct_path[t])):
+					try:
+						valid = correct_path[t][batch_num][last_step[batch_num]]
+					except:
+						valid = env.backtrack(sample[0], kb)
+
+					# if no paths were found, set the label equal to the score so nothing gets changed
+					if len(valid) == 1 and valid[0] == -1:
+						correct[np.array([batch_num]*len(valid), int), :] = normalized_action_probs[batch_num]
+					else:
+						correct[np.array([batch_num]*len(valid), int),np.array(valid, int)] = np.ones(len(valid))
+
+				current_actions = action_chosen.numpy()
+				last_step = [tuple(list(x) + [y]) for (x, y) in zip(last_step, current_actions)]
+
+				# update agent weights
+				correct = tf.convert_to_tensor(correct)
+				policy_nn.update(correct, action_probs)
+				
+				_, new_state, done = env.interact(state_idx, action_chosen)
+				if done or t == 3:
 					if done:
 						print('Success')
 						success += 1
 					print('Episode ends\n')
 					break
 				state_idx = new_state
-
-	print('Success persentage:', success/test_episodes)
-
-if __name__ == "__main__":
-	train()
-	# test(50)
-

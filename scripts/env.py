@@ -22,7 +22,6 @@ class Env(object):
 		self.entity2vec = np.loadtxt(dataPath + 'entity2vec.bern')
 		self.relation2vec = np.loadtxt(dataPath + 'relation2vec.bern')
 
-
 		self.path = []
 		self.path_relations = []
 
@@ -31,6 +30,7 @@ class Env(object):
 		kb_all = f.readlines()
 		f.close()
 
+		# remove all the paths that use the selected relation from the KB for this training
 		self.kb = []
 		if task != None:
 			relation = task.split()[2]
@@ -48,11 +48,13 @@ class Env(object):
 		action: an integer
 		return: (reward, [new_postion, target_position], done)
 		'''
+		self.last_entities = state[0]
 		done = 0 # Whether the episode has finished
 		curr_pos = state[0]
 		target_pos = state[1]
 		chosed_relation = self.relations[action]
 		choices = []
+		# get the list of possible choices
 		for line in self.kb:
 			triple = line.rsplit()
 			e1_idx = self.entity2id_[triple[0]]
@@ -90,6 +92,17 @@ class Env(object):
 			return np.expand_dims(np.concatenate((curr, targ - curr)),axis=0)
 		else:
 			return None
+
+	def backtrack(self, e1, kb, env):
+        # returns all the actions which, taken at the current state, will take the agent to its previous state
+        # this allows the agent to learn to backtrack when it makes a mistake
+		actions = []
+
+		for batch_count, entity in enumerate(e1):
+			potential = kb.getPathsFrom(entity)
+			actions.append([env.relation2id(x.relation) for x in potential if x.connected_entity == self.last_entities[batch_count]])
+		
+		return actions
 
 	def get_valid_actions(self, entityID):
 		actions = set()

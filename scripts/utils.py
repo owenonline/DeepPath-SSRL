@@ -7,6 +7,9 @@ import numpy as np
 from BFS.KB import KB
 from BFS.BFS import BFS
 
+# correct path label
+correct = {}
+
 # hyperparameters
 state_dim = 200
 action_space = 400
@@ -30,6 +33,77 @@ def distance(e1, e2):
 
 def compare(v1, v2):
     return sum(v1 == v2)
+
+def correct_path_gen(e1, e2, kb, env):
+	paths = 0
+	ret1 = kb.getPathsFrom(e1)
+
+	if e2 in [x.connected_entity for x in ret1]:
+		valid_actions = [x.relation for x in ret1 if x.connected_entity == e2]
+		for x in valid_actions:
+			paths += 1
+			yield np.array([env.relation2id(x), 0, 0], int)
+
+	start_entity_second_hop = set(ret1)
+	start_entity_second_hop = [x for x in start_entity_second_hop if x.connected_entity != e1 and x.connected_entity != e2]
+
+	for e21 in [x.connected_entity for x in start_entity_second_hop]:
+		ret2 = kb.getPathsFrom(e21)
+		
+		if e2 in [x.connected_entity for x in ret2]:
+			hop1 = [x.relation for x in ret1 if x.connected_entity == e21]
+			hop2 = [x.relation for x in ret2 if x.connected_entity == e2]
+			for h1 in hop1:
+				for h2 in hop2:
+					paths += 1
+					yield np.array([env.relation2id(h1), env.relation2id(h2), 0], int)
+		
+		start_entity_third_hop = set(ret2)
+		start_entity_third_hop = [x for x in start_entity_third_hop if x.connected_entity != e1 and x.connected_entity != e2]
+
+		for e31 in [x.connected_entity for x in start_entity_third_hop]:
+			ret3 = kb.getPathsFrom(e31)
+
+			if e2 in [x.connected_entity for x in ret3]:
+				hop1 = [x.relation for x in ret1 if x.connected_entity == e21]
+				hop2 = [x.relation for x in ret2 if x.connected_entity == e31]
+				hop3 = [x.relation for x in ret3 if x.connected_entity == e2]
+				for h1 in hop1:
+					for h2 in hop2:
+						for h3 in hop3:
+							paths+=1
+							yield np.array([env.relation2id(h1), env.relation2id(h2), env.relation2id(h3)], int)
+
+def correct_path(e1, e2, kb, env):
+	key = str(e1) + str(e2)
+
+	if not key in list(correct.keys()):
+		for path in correct_path_gen(e1, e2, kb, env):
+			if key in correct:
+				# only save unique paths
+				if not path[0] in correct[key][0][("N/A",)]:
+					correct[key][0][("N/A",)] += [path[0]]
+
+				if ("N/A", path[0]) in correct[key][1]:
+					# only save unique paths
+					if not path[1] in correct[key][1][("N/A", path[0])]:
+						correct[key][1][("N/A", path[0])] += [path[1]]
+				else:
+					correct[key][1][("N/A", path[0])] = [path[1]]
+					
+				if ("N/A", path[0], path[1]) in correct[key][2]:
+					# only save unique paths
+					if not path[2] in correct[key][2][("N/A", path[0], path[1])]:
+						correct[key][2][("N/A", path[0], path[1])] += [path[2]]
+				else:
+					correct[key][2][("N/A", path[0], path[1])] = [path[2]]
+			else:
+				correct[key] = {
+					0: {("N/A",) : [path[0]]},
+					1: {("N/A", path[0]) : [path[1]]},
+					2: {("N/A", path[0], path[1]) : [path[2]]}
+				}
+	return correct[key]
 
 def teacher(e1, e2, num_paths, env, path = None):
 	f = open(path)
