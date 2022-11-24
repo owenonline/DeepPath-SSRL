@@ -1,6 +1,6 @@
 from __future__ import division
 from __future__ import print_function
-import tensorflow as tf 
+import tensorflow as tf
 import numpy as np
 from itertools import count
 import sys
@@ -43,7 +43,7 @@ class SupervisedPolicy(object):
 		return loss
 
 def train():
-	tf.reset_default_graph()
+	# tf.reset_default_graph()
 	policy_nn = SupervisedPolicy()
 
 	print("relation path: {}".format(relationPath))
