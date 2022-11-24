@@ -25,20 +25,14 @@ class SupervisedPolicy(object):
 		self.initializer = tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform")
 		with tf.compat.v1.variable_scope('supervised_policy'):
 			self.state = tf.compat.v1.placeholder(tf.float32, [None, state_dim], name = 'state')
-			self.action = tf.compat.v1.placeholder(tf.int32, [None], name = 'action')
 			self.correct = tf.compat.v1.placeholder(tf.float32, [None, action_space], 'correct')
 			self.action_prob = policy_nn(self.state, state_dim, action_space, self.initializer)
 
-			action_mask = tf.cast(tf.one_hot(self.action, depth = action_space), tf.bool)
-			self.picked_action_prob = tf.boolean_mask(tensor=self.action_prob, mask=action_mask)
+			self.action_prob = normalize_probs(self.action_prob)
 
 			self.loss = tf.compat.v1.keras.losses.categorical_crossentropy(self.correct, self.action_prob)
 			self.optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate = learning_rate)
 			self.train_op = self.optimizer.minimize(self.loss)
-
-	def predict(self, state, sess = None):
-		sess = sess or tf.compat.v1.get_default_session()
-		return sess.run(self.action_prob, {self.state: state})
 
 	def update(self, state, correct, sess = None):
 		sess = sess or tf.compat.v1.get_default_session()
@@ -99,32 +93,20 @@ def train():
 			last_step = ("N/A",)
 			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
 			for t in count():
-				print("current entity: {}".format(state_idx[0]))
 				state_vec = env.idx_state(state_idx)
-				action_probs = policy_nn.predict(state_vec)
-				action_chosen = np.random.choice(np.arange(action_space), p = np.squeeze(action_probs))
 
 				# supervised learning magic
-				normalized_action_probs = normalize_probs(action_probs)
-				correct = np.full(normalized_action_probs.shape,0)
+				correct = np.full((1, action_space), 0)
 
-				try:
-					valid = np.histogram(correct_path[t][last_step], bins=action_space, range=(0, action_space), density=True)[0]
-				except:
-					valid = env.backtrack(sample[0], kb)
-					print("BACKTRACKING: valid {}".format(valid))
-					valid = np.histogram(valid, bins=action_space, range=(0, action_space), density=True)[0]
+				valid = np.histogram(correct_path[t][last_step], bins=action_space, range=(0, action_space), density=True)[0]
 
-				# print("last step: {} valid actions: {}".format(last_step, valid))
-
-				# if no paths were found, set the label equal to the score so nothing gets changed
 				if len(valid) == 1 and valid[0] == -1:
-					correct[0, :] = normalized_action_probs[0]
+					print("no correct paths found, breaking")
+					break
 				else:
-					correct[0, :] = valid#np.ones(len(valid))#np.array(valid, int)
+					correct[0, :] = valid
 
-				# action_chosen = int(np.random.choice(np.arange(action_space), 1, p=valid))
-
+				action_chosen = int(np.random.choice(np.arange(action_space), 1, p=valid))
 				last_step = tuple(list(last_step) + [action_chosen])
 
 				# update agent weights

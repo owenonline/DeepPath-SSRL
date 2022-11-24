@@ -12,6 +12,7 @@ from networks import policy_nn, value_nn
 from utils import *
 from env import Env
 
+tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
 task = sys.argv[2]
