@@ -49,7 +49,7 @@ class Env(object):
 		action: an integer
 		return: (reward, [new_postion, target_position], done)
 		'''
-		self.last_entities = state[0]
+		self.last_entity = state[0]
 		done = 0 # Whether the episode has finished
 		curr_pos = state[0]
 		target_pos = state[1]
@@ -97,11 +97,9 @@ class Env(object):
 	def backtrack(self, e1, kb):
         # returns all the actions which, taken at the current state, will take the agent to its previous state
         # this allows the agent to learn to backtrack when it makes a mistake
-		actions = []
 
-		for batch_count, entity in enumerate([e1]):
-			potential = kb.getPathsFrom(entity)
-			actions.append([self.relation2id(x.relation) for x in potential if x.connected_entity == self.last_entities])
+		potential = kb.getPathsFrom(e1)
+		actions = [self.relation2id_(x.relation) for x in potential if x.connected_entity == self.last_entity]
 		
 		return actions
 

@@ -77,6 +77,7 @@ def train():
 		kb.addRelation(ent1, rel, ent2)
 
 	num_samples = len(train_data)
+	success = 0
 
 	saver = tf.compat.v1.train.Saver()
 	with tf.compat.v1.Session() as sess:
@@ -95,41 +96,44 @@ def train():
 
 			correct_path = label_gen(sample[0], sample[1], kb, env)
 
-			last_step = [("N/A",)]
+			last_step = ("N/A",)
 			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
 			for t in count():
+				print("current entity: {}".format(state_idx[0]))
 				state_vec = env.idx_state(state_idx)
 				action_probs = policy_nn.predict(state_vec)
 				action_chosen = np.random.choice(np.arange(action_space), p = np.squeeze(action_probs))
 
 				# supervised learning magic
 				normalized_action_probs = normalize_probs(action_probs)
-				active_length = normalized_action_probs.shape[0]
-				choices = normalized_action_probs.shape[1]
+				correct = np.full(normalized_action_probs.shape,0)
 
-				correct = np.full((active_length,choices),0)
+				try:
+					valid = np.histogram(correct_path[t][last_step], bins=action_space, range=(0, action_space), density=True)[0]
+				except:
+					valid = env.backtrack(sample[0], kb)
+					print("BACKTRACKING: valid {}".format(valid))
+					valid = np.histogram(valid, bins=action_space, range=(0, action_space), density=True)[0]
 
-				for batch_num in range(len(correct_path[t])):
-					try:
-						valid = correct_path[t][last_step[batch_num]]
-					except:
-						valid = env.backtrack(sample[0], kb)
+				# print("last step: {} valid actions: {}".format(last_step, valid))
 
-					# if no paths were found, set the label equal to the score so nothing gets changed
-					if len(valid) == 1 and valid[0] == -1:
-						correct[np.array([batch_num]*len(valid), int), :] = normalized_action_probs[batch_num]
-					else:
-						correct[np.array([batch_num]*len(valid), int), np.array(valid, int)] = np.ones(len(valid))
+				# if no paths were found, set the label equal to the score so nothing gets changed
+				if len(valid) == 1 and valid[0] == -1:
+					correct[0, :] = normalized_action_probs[0]
+				else:
+					correct[0, :] = valid#np.ones(len(valid))#np.array(valid, int)
 
-				current_actions = action_chosen
-				last_step = [tuple(list(x) + [y]) for (x, y) in zip(last_step, [current_actions])]
+				# action_chosen = int(np.random.choice(np.arange(action_space), 1, p=valid))
+
+				last_step = tuple(list(last_step) + [action_chosen])
 
 				# update agent weights
-				# correct = tf.convert_to_tensor(value=correct)
 				policy_nn.update(state_vec, correct)
 				
 				_, new_state, done = env.interact(state_idx, action_chosen)
+
 				if done or t == 2:
+					print("path: {}".format(env.path))
 					if done:
 						print('Success')
 						success += 1

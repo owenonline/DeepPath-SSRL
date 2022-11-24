@@ -38,8 +38,6 @@ def correct_path_gen(e1, e2, kb, env):
 	paths = 0
 	ret1 = kb.getPathsFrom(e1)
 
-	print("the action space from this node is: {}".format(len([x.connected_entity for x in ret1])))
-
 	if e2 in [x.connected_entity for x in ret1]:
 		valid_actions = [x.relation for x in ret1 if x.connected_entity == e2]
 		for h1 in valid_actions:
@@ -83,20 +81,20 @@ def label_gen(e1, e2, kb, env):
 		for path in correct_path_gen(e1, e2, kb, env):
 			if key in correct:
 				# only save unique paths
-				if not path[0] in correct[key][0][("N/A",)]:
-					correct[key][0][("N/A",)] += [path[0]]
+				# if not path[0] in correct[key][0][("N/A",)]:
+				correct[key][0][("N/A",)] += [path[0]]
 
 				if ("N/A", path[0]) in correct[key][1]:
 					# only save unique paths
-					if not path[1] in correct[key][1][("N/A", path[0])]:
-						correct[key][1][("N/A", path[0])] += [path[1]]
+					# if not path[1] in correct[key][1][("N/A", path[0])]:
+					correct[key][1][("N/A", path[0])] += [path[1]]
 				else:
 					correct[key][1][("N/A", path[0])] = [path[1]]
 					
 				if ("N/A", path[0], path[1]) in correct[key][2]:
 					# only save unique paths
-					if not path[2] in correct[key][2][("N/A", path[0], path[1])]:
-						correct[key][2][("N/A", path[0], path[1])] += [path[2]]
+					# if not path[2] in correct[key][2][("N/A", path[0], path[1])]:
+					correct[key][2][("N/A", path[0], path[1])] += [path[2]]
 				else:
 					correct[key][2][("N/A", path[0], path[1])] = [path[2]]
 			else:
