@@ -92,10 +92,10 @@ def train():
 
 			last_step = ("N/A",)
 			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
+			last_state_idx = None
 			for t in count():
 				state_vec = env.idx_state(state_idx)
 
-				# supervised learning magic
 				correct = np.full((1, action_space), 0)
 
 				try:
@@ -105,10 +105,17 @@ def train():
 						print("no correct paths found, breaking")
 						break
 					else:
+						print("working")
 						correct[0, :] = valid
 				except:
-					print("Agent entered unrecoverable state, breaking")
+					# state_idx = last_state_idx
+					# last_step = last_step[:-1]
+					# t -= 2
+					# continue
+					print("agent has entered unrecoverable state, breaking")
 					break
+
+				# if training results are undesirable, try putting a loop here that runs the update through action choosing lines until an action in the label is picked
 
 				# update agent weights
 				action_prob = policy_nn.update(state_vec, correct)
@@ -127,6 +134,7 @@ def train():
 						success += 1
 					print('Episode ends\n')
 					break
+				last_state_idx = state_idx
 				state_idx = new_state
 
 if __name__ == "__main__":
