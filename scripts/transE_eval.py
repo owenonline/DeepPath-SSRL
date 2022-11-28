@@ -101,7 +101,7 @@ score_label_ranked = sorted(score_label, key = lambda x:x[0], reverse=True)
 
 
 mean_ap = np.mean(aps)
-print 'TransE MAP: ', mean_ap
+print('TransE MAP: ', mean_ap)
 
 
 

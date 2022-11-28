@@ -106,6 +106,6 @@ score_label = zip(score_all, test_labels)
 score_label_ranked = sorted(score_label, key = lambda x:x[0], reverse=True)
 
 mean_ap = np.mean(aps)
-print 'TransR MAP: ', mean_ap
+print('TransR MAP: ', mean_ap)
 
 

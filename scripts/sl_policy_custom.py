@@ -136,8 +136,8 @@ def train():
 					break
 				last_state_idx = state_idx
 				state_idx = new_state
-		saver.save(sess, 'models/policy_supervised_' + relation)
-		print("model saved at models/policy_supervised_" + relation)
+		saver.save(sess, 'models/policy_supervised_ssrl_' + relation)
+		print("model saved at models/policy_supervised_ssrl_" + relation)
 
 if __name__ == "__main__":
 	train()

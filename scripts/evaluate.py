@@ -65,7 +65,7 @@ def get_features():
 	paths = f.readlines()
 	f.close()
 
-	print len(paths)
+	print(len(paths))
 
 	for line in paths:
 		path = line.rstrip()
@@ -84,7 +84,7 @@ def get_features():
 			useful_paths.append(pathIndex)
 			named_paths.append(pathName)
 
-	print 'How many paths used: ', len(useful_paths)
+	print('How many paths used: ', len(useful_paths))
 	return useful_paths, named_paths
 
 def evaluate_logic():
@@ -195,7 +195,7 @@ def evaluate_logic():
 	score_label_ranked = sorted(score_label, key = lambda x:x[0], reverse=True)
 
 	mean_ap = np.mean(aps)
-	print 'RL MAP: ', mean_ap
+	print('RL MAP: ', mean_ap)
 
 
 def bfs_two(e1,e2,path,kb,kb_inv):
