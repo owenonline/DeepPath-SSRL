@@ -2,6 +2,7 @@ from __future__ import division
 from __future__ import print_function
 import tensorflow as tf 
 import numpy as np
+from sklearn.preprocessing import normalize
 from itertools import count
 import sys
 
@@ -36,8 +37,8 @@ class SupervisedPolicy(object):
 
 	def update(self, state, correct, sess = None):
 		sess = sess or tf.compat.v1.get_default_session()
-		_, loss = sess.run([self.train_op, self.loss], {self.state: state, self.correct: correct})
-		return loss
+		_, _, action_prob = sess.run([self.train_op, self.loss, self.action_prob], {self.state: state, self.correct: correct})
+		return action_prob
 
 def normalize_probs(probs):
 	probs = tf.cast(probs, dtype=tf.float32)
@@ -76,10 +77,9 @@ def train():
 	saver = tf.compat.v1.train.Saver()
 	with tf.compat.v1.Session() as sess:
 		sess.run(tf.compat.v1.global_variables_initializer())
+		
 		if num_samples > 500:
 			num_samples = 500
-		else:
-			num_episodes = num_samples
 
 		for episode in range(num_samples):
 			print("Episode %d" % episode)
@@ -98,19 +98,25 @@ def train():
 				# supervised learning magic
 				correct = np.full((1, action_space), 0)
 
-				valid = np.histogram(correct_path[t][last_step], bins=action_space, range=(0, action_space), density=True)[0]
+				try:
+					valid = np.histogram(correct_path[t][last_step], bins=action_space, range=(0, action_space), density=True)[0]
 
-				if len(valid) == 1 and valid[0] == -1:
-					print("no correct paths found, breaking")
+					if len(valid) == 1 and valid[0] == -1:
+						print("no correct paths found, breaking")
+						break
+					else:
+						correct[0, :] = valid
+				except:
+					print("Agent entered unrecoverable state, breaking")
 					break
-				else:
-					correct[0, :] = valid
-
-				action_chosen = int(np.random.choice(np.arange(action_space), 1, p=valid))
-				last_step = tuple(list(last_step) + [action_chosen])
 
 				# update agent weights
-				policy_nn.update(state_vec, correct)
+				action_prob = policy_nn.update(state_vec, correct)
+				normalized_probs = normalize(action_prob, norm="l1")[0]
+
+				# select action based on agent output
+				action_chosen = int(np.random.choice(np.arange(action_space), 1, p=normalized_probs))
+				last_step = tuple(list(last_step) + [action_chosen])
 				
 				_, new_state, done = env.interact(state_idx, action_chosen)
 
