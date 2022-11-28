@@ -12,6 +12,8 @@ from BFS.KB import KB
 from BFS.BFS import BFS
 import time
 
+tf.compat.v1.disable_eager_execution()
+
 relation = sys.argv[1]
 # episodes = int(sys.argv[2])
 graphpath = dataPath + 'tasks/' + relation + '/' + 'graph.txt'
@@ -20,25 +22,25 @@ relationPath = dataPath + 'tasks/' + relation + '/' + 'train_pos'
 class SupervisedPolicy(object):
 	"""docstring for SupervisedPolicy"""
 	def __init__(self, learning_rate = 0.001):
-		self.initializer = tf.contrib.layers.xavier_initializer()
-		with tf.variable_scope('supervised_policy'):
-			self.state = tf.placeholder(tf.float32, [None, state_dim], name = 'state')
-			self.action = tf.placeholder(tf.int32, [None], name = 'action')
+		self.initializer = tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform")
+		with tf.compat.v1.variable_scope('supervised_policy'):
+			self.state = tf.compat.v1.placeholder(tf.float32, [None, state_dim], name = 'state')
+			self.action = tf.compat.v1.placeholder(tf.int32, [None], name = 'action')
 			self.action_prob = policy_nn(self.state, state_dim, action_space, self.initializer)
 
 			action_mask = tf.cast(tf.one_hot(self.action, depth = action_space), tf.bool)
-			self.picked_action_prob = tf.boolean_mask(self.action_prob, action_mask)
+			self.picked_action_prob = tf.boolean_mask(tensor=self.action_prob, mask=action_mask)
 
-			self.loss = tf.reduce_sum(-tf.log(self.picked_action_prob)) + sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES, scope = 'supervised_policy'))
-			self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate)
+			self.loss = tf.reduce_sum(input_tensor=-tf.math.log(self.picked_action_prob)) + sum(tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES, scope = 'supervised_policy'))
+			self.optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate = learning_rate)
 			self.train_op = self.optimizer.minimize(self.loss)
 
 	def predict(self, state, sess = None):
-		sess = sess or tf.get_default_session()
+		sess = sess or tf.compat.v1.get_default_session()
 		return sess.run(self.action_prob, {self.state: state})
 
 	def update(self, state, action, sess = None):
-		sess = sess or tf.get_default_session()
+		sess = sess or tf.compat.v1.get_default_session()
 		_, loss = sess.run([self.train_op, self.loss], {self.state: state, self.action: action})
 		return loss
 
@@ -55,9 +57,9 @@ def train():
 
 	num_samples = len(train_data)
 
-	saver = tf.train.Saver()
-	with tf.Session() as sess:
-		sess.run(tf.global_variables_initializer())
+	saver = tf.compat.v1.train.Saver()
+	with tf.compat.v1.Session() as sess:
+		sess.run(tf.compat.v1.global_variables_initializer())
 		if num_samples > 500:
 			num_samples = 500
 		else:
@@ -91,7 +93,7 @@ def train():
 
 
 def test(test_episodes):
-	tf.reset_default_graph()
+	tf.compat.v1.reset_default_graph()
 	policy_nn = SupervisedPolicy()
 
 	f = open(relationPath)
@@ -105,8 +107,8 @@ def test(test_episodes):
 	
 	success = 0
 
-	saver = tf.train.Saver()
-	with tf.Session() as sess:
+	saver = tf.compat.v1.train.Saver()
+	with tf.compat.v1.Session() as sess:
 		saver.restore(sess, 'models/policy_supervised_'+ relation)
 		print('Model reloaded')
 		for episode in range(len(test_data)):
