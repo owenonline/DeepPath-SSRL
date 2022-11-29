@@ -16,6 +16,7 @@ tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
 task = sys.argv[2]
+method = sys.argv[3]
 graphpath = relation + 'graph.txt'#dataPath + 'tasks/' + # + '/'
 relationPath = relation + 'train_pos'#dataPath + 'tasks/' + # + '/'
 
@@ -189,13 +190,13 @@ def retrain():
 
 	saver = tf.compat.v1.train.Saver()
 	with tf.compat.v1.Session() as sess:
-		saver.restore(sess, 'models/policy_supervised_' + relation)
+		saver.restore(sess, 'models/policy_supervised_{}_'.format(method) + relation.split("/")[-2])
 		print("sl_policy restored")
 		episodes = len(training_pairs)
 		if episodes > 300:
 			episodes = 300
-		REINFORCE(training_pairs, policy_network, episodes)
-		saver.save(sess, 'models/policy_retrained' + relation)
+		# REINFORCE(training_pairs, policy_network, episodes)
+		saver.save(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2])
 	print('Retrained model saved')
 
 def test():
@@ -217,87 +218,87 @@ def test():
 	path_set = set()
 
 	with tf.compat.v1.Session() as sess:
-		saver.restore(sess, 'models/policy_retrained' + relation)
+		saver.restore(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2])
 		print('Model reloaded')
 
-		if test_num > 500:
-			test_num = 500
+	# 	if test_num > 500:
+	# 		test_num = 500
 
-		for episode in range(test_num):
-			print('Test sample %d: %s' % (episode,test_data[episode][:-1]))
-			env = Env(dataPath, test_data[episode])
-			sample = test_data[episode].split()
-			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
+	# 	for episode in range(test_num):
+	# 		print('Test sample %d: %s' % (episode,test_data[episode][:-1]))
+	# 		env = Env(dataPath, test_data[episode])
+	# 		sample = test_data[episode].split()
+	# 		state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
 
-			transitions = []
+	# 		transitions = []
 
-			for t in count():
-				state_vec = env.idx_state(state_idx)
-				action_probs = policy_network.predict(state_vec)
+	# 		for t in count():
+	# 			state_vec = env.idx_state(state_idx)
+	# 			action_probs = policy_network.predict(state_vec)
 
-				action_probs = np.squeeze(action_probs)
+	# 			action_probs = np.squeeze(action_probs)
 
-				action_chosen = np.random.choice(np.arange(action_space), p = action_probs)
-				reward, new_state, done = env.interact(state_idx, action_chosen)
-				new_state_vec = env.idx_state(new_state)
-				transitions.append(Transition(state = state_vec, action = action_chosen, next_state = new_state_vec, reward = reward))
+	# 			action_chosen = np.random.choice(np.arange(action_space), p = action_probs)
+	# 			reward, new_state, done = env.interact(state_idx, action_chosen)
+	# 			new_state_vec = env.idx_state(new_state)
+	# 			transitions.append(Transition(state = state_vec, action = action_chosen, next_state = new_state_vec, reward = reward))
 
-				if done or t == max_steps_test:
-					if done:
-						success += 1
-						print("Success\n")
-						path = path_clean(' -> '.join(env.path))
-						path_found.append(path)
-					else:
-						print('Episode ends due to step limit\n')
-					break
-				state_idx = new_state
+	# 			if done or t == max_steps_test:
+	# 				if done:
+	# 					success += 1
+	# 					print("Success\n")
+	# 					path = path_clean(' -> '.join(env.path))
+	# 					path_found.append(path)
+	# 				else:
+	# 					print('Episode ends due to step limit\n')
+	# 				break
+	# 			state_idx = new_state
 			
-			if done:
-				if len(path_set) != 0:
-					path_found_embedding = [env.path_embedding(path.split(' -> ')) for path in path_set]
-					curr_path_embedding = env.path_embedding(env.path_relations)
-					path_found_embedding = np.reshape(path_found_embedding, (-1,embedding_dim))
-					cos_sim = cosine_similarity(path_found_embedding, curr_path_embedding)
-					diverse_reward = -np.mean(cos_sim)
-					print('diverse_reward', diverse_reward)
-					#total_reward = 0.1*global_reward + 0.8*length_reward + 0.1*diverse_reward 
-					state_batch = []
-					action_batch = []
-					for t, transition in enumerate(transitions):
-						if transition.reward == 0:
-							state_batch.append(transition.state)
-							action_batch.append(transition.action)
-					policy_network.update(np.reshape(state_batch,(-1,state_dim)), 0.1*diverse_reward, action_batch)
-				path_set.add(' -> '.join(env.path_relations))
+	# 		if done:
+	# 			if len(path_set) != 0:
+	# 				path_found_embedding = [env.path_embedding(path.split(' -> ')) for path in path_set]
+	# 				curr_path_embedding = env.path_embedding(env.path_relations)
+	# 				path_found_embedding = np.reshape(path_found_embedding, (-1,embedding_dim))
+	# 				cos_sim = cosine_similarity(path_found_embedding, curr_path_embedding)
+	# 				diverse_reward = -np.mean(cos_sim)
+	# 				print('diverse_reward', diverse_reward)
+	# 				#total_reward = 0.1*global_reward + 0.8*length_reward + 0.1*diverse_reward 
+	# 				state_batch = []
+	# 				action_batch = []
+	# 				for t, transition in enumerate(transitions):
+	# 					if transition.reward == 0:
+	# 						state_batch.append(transition.state)
+	# 						action_batch.append(transition.action)
+	# 				policy_network.update(np.reshape(state_batch,(-1,state_dim)), 0.1*diverse_reward, action_batch)
+	# 			path_set.add(' -> '.join(env.path_relations))
 
 
-	for path in path_found:
-		rel_ent = path.split(' -> ')
-		path_relation = []
-		for idx, item in enumerate(rel_ent):
-			if idx%2 == 0:
-				path_relation.append(item)
-		path_relation_found.append(' -> '.join(path_relation))
+	# for path in path_found:
+	# 	rel_ent = path.split(' -> ')
+	# 	path_relation = []
+	# 	for idx, item in enumerate(rel_ent):
+	# 		if idx%2 == 0:
+	# 			path_relation.append(item)
+	# 	path_relation_found.append(' -> '.join(path_relation))
 
-	# path_stats = collections.Counter(path_found).items()
-	relation_path_stats = collections.Counter(path_relation_found).items()
-	relation_path_stats = sorted(relation_path_stats, key = lambda x:x[1], reverse=True)
+	# # path_stats = collections.Counter(path_found).items()
+	# relation_path_stats = collections.Counter(path_relation_found).items()
+	# relation_path_stats = sorted(relation_path_stats, key = lambda x:x[1], reverse=True)
 
-	ranking_path = []
-	for item in relation_path_stats:
-		path = item[0]
-		length = len(path.split(' -> '))
-		ranking_path.append((path, length))
+	# ranking_path = []
+	# for item in relation_path_stats:
+	# 	path = item[0]
+	# 	length = len(path.split(' -> '))
+	# 	ranking_path.append((path, length))
 
-	ranking_path = sorted(ranking_path, key = lambda x:x[1])
-	print('Success persentage:', success/test_num)
+	# ranking_path = sorted(ranking_path, key = lambda x:x[1])
+	# print('Success persentage:', success/test_num)
 
-	f = open(dataPath + 'tasks/' + relation + '/' + 'path_to_use.txt', 'w')
-	for item in ranking_path:
-		f.write(item[0] + '\n')
-	f.close()
-	print('path to use saved')
+	# f = open(relation + 'path_to_use.txt', 'w')
+	# for item in ranking_path:
+	# 	f.write(item[0] + '\n')
+	# f.close()
+	# print('path to use saved')
 	return
 
 if __name__ == "__main__":

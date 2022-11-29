@@ -4,10 +4,8 @@ import numpy as np
 relation = sys.argv[1]
 dataset = sys.argv[2]
 
-dataPath_ = relation#'../NELL-995/tasks/'  + 
-
-ent_id_path = '../{}/'.format(dataset) + 'entity2id.txt'
-rel_id_path = '../{}/'.format(dataset) + 'relation2id.txt'
+ent_id_path = '{}/'.format(dataset) + 'entity2id.txt'
+rel_id_path = '{}/'.format(dataset) + 'relation2id.txt'
 test_data_path = relation + 'sort_test.pairs' # '../NELL-995/tasks/' + 
 
 f1 = open(ent_id_path)
@@ -26,9 +24,9 @@ for line in content2:
 	relation2id[line.split()[0]] = int(line.split()[1])
 
 
-ent_vec = np.loadtxt(dataPath_ + '/entity2vec.bern')
-rel_vec = np.loadtxt(dataPath_ + '/relation2vec.bern')
-M = np.loadtxt(dataPath_ + '/A.bern')
+ent_vec = np.loadtxt(relation + 'entity2vec.bern')
+rel_vec = np.loadtxt(relation + 'relation2vec.bern')
+M = np.loadtxt(relation + 'A.bern')
 M = M.reshape([-1,50,50])
 
 f = open(test_data_path)

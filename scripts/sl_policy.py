@@ -62,34 +62,34 @@ def train():
 		sess.run(tf.compat.v1.global_variables_initializer())
 		if num_samples > 500:
 			num_samples = 500
-		else:
-			num_episodes = num_samples
+		# else:
+		# 	num_episodes = num_samples
 
-		for episode in range(num_samples):
-			print("Episode %d" % episode)
-			print('Training Sample:', train_data[episode%num_samples]) # [:-1])
+		# for episode in range(num_samples):
+		# 	print("Episode %d" % episode)
+		# 	print('Training Sample:', train_data[episode%num_samples]) # [:-1])
 
-			env = Env(dataPath, train_data[episode%num_samples])
-			sample = train_data[episode%num_samples].split()
+		# 	env = Env(dataPath, train_data[episode%num_samples])
+		# 	sample = train_data[episode%num_samples].split()
 
-			try:
-				good_episodes = teacher(sample[0], sample[1], 5, env, graphpath)
-			except Exception as e:
-				print('Cannot find a path')
-				continue
+		# 	try:
+		# 		good_episodes = teacher(sample[0], sample[1], 5, env, graphpath)
+		# 	except Exception as e:
+		# 		print('Cannot find a path')
+		# 		continue
 
-			for item in good_episodes:
-				state_batch = []
-				action_batch = []
-				for t, transition in enumerate(item):
-					state_batch.append(transition.state)
-					action_batch.append(transition.action)
-				state_batch = np.squeeze(state_batch)
-				state_batch = np.reshape(state_batch, [-1, state_dim])
-				policy_nn.update(state_batch, action_batch)
+		# 	for item in good_episodes:
+		# 		state_batch = []
+		# 		action_batch = []
+		# 		for t, transition in enumerate(item):
+		# 			state_batch.append(transition.state)
+		# 			action_batch.append(transition.action)
+		# 		state_batch = np.squeeze(state_batch)
+		# 		state_batch = np.reshape(state_batch, [-1, state_dim])
+		# 		policy_nn.update(state_batch, action_batch)
 
-		saver.save(sess, 'models/policy_supervised_' + relation)
-		print('Model saved')
+		saver.save(sess, 'models/policy_supervised_rl_' + relation.split("/")[-2])
+		print("model saved at models/policy_supervised_rl_" + relation.split("/")[-2])
 
 
 def test(test_episodes):

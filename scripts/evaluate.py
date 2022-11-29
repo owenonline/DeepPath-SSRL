@@ -10,13 +10,12 @@ from keras.layers import Dense, Activation
 relation = sys.argv[1]
 dataset = sys.argv[2]
 
-dataPath_ = relation#'../NELL-995/tasks/'  + 
-featurePath = dataPath_ + 'path_to_use.txt'
-feature_stats = dataPath_ + 'path_stats.txt'
-relationId_path = '../{}/relation2id.txt'.format(dataset)
+featurePath = relation + 'path_to_use.txt'
+feature_stats = relation + 'path_stats.txt'
+relationId_path = '{}/relation2id.txt'.format(dataset)
 
 def train(kb, kb_inv, named_paths):
-	f = open(dataPath_ + '/train.pairs')
+	f = open(relation + 'train.pairs')
 	train_data = f.readlines()
 	f.close()
 	train_pairs = []
@@ -92,7 +91,7 @@ def evaluate_logic():
 	kb = KB()
 	kb_inv = KB()
 
-	f = open(dataPath_ + '/graph.txt')
+	f = open(relation + 'graph.txt')
 	kb_lines = f.readlines()
 	f.close()
 
@@ -108,7 +107,7 @@ def evaluate_logic():
 	model = train(kb, kb_inv, named_paths)
 
 
-	f = open(dataPath_ + '/sort_test.pairs')
+	f = open(relation + 'sort_test.pairs')
 	test_data = f.readlines()
 	f.close()
 	test_pairs = []

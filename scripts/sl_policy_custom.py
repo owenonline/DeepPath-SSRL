@@ -81,63 +81,63 @@ def train():
 		if num_samples > 500:
 			num_samples = 500
 
-		for episode in range(num_samples):
-			print("Episode %d" % episode)
-			print('Training Sample:', train_data[episode%num_samples]) # [:-1])
+		# for episode in range(num_samples):
+		# 	print("Episode %d" % episode)
+		# 	print('Training Sample:', train_data[episode%num_samples]) # [:-1])
 
-			env = Env(dataPath, train_data[episode%num_samples])
-			sample = train_data[episode%num_samples].split()
+		# 	env = Env(dataPath, train_data[episode%num_samples])
+		# 	sample = train_data[episode%num_samples].split()
 
-			correct_path = label_gen(sample[0], sample[1], kb, env)
+		# 	correct_path = label_gen(sample[0], sample[1], kb, env)
 
-			last_step = ("N/A",)
-			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
-			last_state_idx = None
-			for t in count():
-				state_vec = env.idx_state(state_idx)
+		# 	last_step = ("N/A",)
+		# 	state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
+		# 	last_state_idx = None
+		# 	for t in count():
+		# 		state_vec = env.idx_state(state_idx)
 
-				correct = np.full((1, action_space), 0)
+		# 		correct = np.full((1, action_space), 0)
 
-				try:
-					valid = np.histogram(correct_path[t][last_step], bins=action_space, range=(0, action_space), density=True)[0]
+		# 		try:
+		# 			valid = np.histogram(correct_path[t][last_step], bins=action_space, range=(0, action_space), density=True)[0]
 
-					if len(valid) == 1 and valid[0] == -1:
-						print("no correct paths found, breaking")
-						break
-					else:
-						print("working")
-						correct[0, :] = valid
-				except:
-					# state_idx = last_state_idx
-					# last_step = last_step[:-1]
-					# t -= 2
-					# continue
-					print("agent has entered unrecoverable state, breaking")
-					break
+		# 			if len(valid) == 1 and valid[0] == -1:
+		# 				print("no correct paths found, breaking")
+		# 				break
+		# 			else:
+		# 				print("working")
+		# 				correct[0, :] = valid
+		# 		except:
+		# 			# state_idx = last_state_idx
+		# 			# last_step = last_step[:-1]
+		# 			# t -= 2
+		# 			# continue
+		# 			print("agent has entered unrecoverable state, breaking")
+		# 			break
 
-				# if training results are undesirable, try putting a loop here that runs the update through action choosing lines until an action in the label is picked
+		# 		# if training results are undesirable, try putting a loop here that runs the update through action choosing lines until an action in the label is picked
 
-				# update agent weights
-				action_prob = policy_nn.update(state_vec, correct)
-				normalized_probs = normalize(action_prob, norm="l1")[0]
+		# 		# update agent weights
+		# 		action_prob = policy_nn.update(state_vec, correct)
+		# 		normalized_probs = normalize(action_prob, norm="l1")[0]
 
-				# select action based on agent output
-				action_chosen = int(np.random.choice(np.arange(action_space), 1, p=normalized_probs))
-				last_step = tuple(list(last_step) + [action_chosen])
+		# 		# select action based on agent output
+		# 		action_chosen = int(np.random.choice(np.arange(action_space), 1, p=normalized_probs))
+		# 		last_step = tuple(list(last_step) + [action_chosen])
 				
-				_, new_state, done = env.interact(state_idx, action_chosen)
+		# 		_, new_state, done = env.interact(state_idx, action_chosen)
 
-				if done or t == 2:
-					print("path: {}".format(env.path))
-					if done:
-						print('Success')
-						success += 1
-					print('Episode ends\n')
-					break
-				last_state_idx = state_idx
-				state_idx = new_state
-		saver.save(sess, 'models/policy_supervised_ssrl_' + relation)
-		print("model saved at models/policy_supervised_ssrl_" + relation)
+		# 		if done or t == 2:
+		# 			print("path: {}".format(env.path))
+		# 			if done:
+		# 				print('Success')
+		# 				success += 1
+		# 			print('Episode ends\n')
+		# 			break
+		# 		last_state_idx = state_idx
+		# 		state_idx = new_state
+		saver.save(sess, 'models/policy_supervised_ssrl_' + relation.split("/")[-2])
+		print("model saved at models/policy_supervised_ssrl_" + relation.split("/")[-2])
 
 if __name__ == "__main__":
 	train()
