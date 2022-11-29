@@ -88,8 +88,8 @@ def train():
 				state_batch = np.reshape(state_batch, [-1, state_dim])
 				policy_nn.update(state_batch, action_batch)
 
-		saver.save(sess, 'models/policy_supervised_rl_' + relation.split("/")[-2])
-		print("model saved at models/policy_supervised_rl_" + relation.split("/")[-2])
+		saver.save(sess, 'models/policy_supervised_rl_' + relation.split("/")[-2].replace(".","_"))
+		print("model saved at models/policy_supervised_rl_" + relation.split("/")[-2].replace(".","_"))
 
 
 def test(test_episodes):

@@ -4,8 +4,8 @@ import numpy as np
 relation = sys.argv[1]
 dataset = sys.argv[2]
 
-ent_id_path = '../{}/'.format(dataset) + 'entity2id.txt'
-rel_id_path = '../{}/'.format(dataset) + 'relation2id.txt'
+ent_id_path = '{}/'.format(dataset) + 'entity2id.txt'
+rel_id_path = '{}/'.format(dataset) + 'relation2id.txt'
 test_data_path = relation + 'sort_test.pairs' # '../NELL-995/tasks/' + 
 
 f1 = open(ent_id_path)

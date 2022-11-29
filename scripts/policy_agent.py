@@ -171,7 +171,7 @@ def REINFORCE(training_pairs, policy_nn, num_episodes):
 	relation_path_stats = collections.Counter(path_relation_found).items()
 	relation_path_stats = sorted(relation_path_stats, key = lambda x:x[1], reverse=True)
 
-	f = open(dataPath + 'tasks/' + relation + '/' + 'path_stats.txt', 'w')
+	f = open(relation + 'path_stats.txt', 'w')
 	for item in relation_path_stats:
 		f.write(item[0]+'\t'+str(item[1])+'\n')
 	f.close()
@@ -190,13 +190,13 @@ def retrain():
 
 	saver = tf.compat.v1.train.Saver()
 	with tf.compat.v1.Session() as sess:
-		saver.restore(sess, 'models/policy_supervised_{}_'.format(method) + relation.split("/")[-2])
+		saver.restore(sess, 'models/policy_supervised_{}_'.format(method) + relation.split("/")[-2].replace(".","_"))
 		print("sl_policy restored")
 		episodes = len(training_pairs)
 		if episodes > 300:
 			episodes = 300
 		REINFORCE(training_pairs, policy_network, episodes)
-		saver.save(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2])
+		saver.save(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2].replace(".","_"))
 	print('Retrained model saved')
 
 def test():
@@ -218,7 +218,7 @@ def test():
 	path_set = set()
 
 	with tf.compat.v1.Session() as sess:
-		saver.restore(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2])
+		saver.restore(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2].replace(".","_"))
 		print('Model reloaded')
 
 		if test_num > 500:
