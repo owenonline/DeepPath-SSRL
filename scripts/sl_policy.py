@@ -16,8 +16,8 @@ tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
 # episodes = int(sys.argv[2])
-graphpath = dataPath + 'tasks/' + relation + '/' + 'graph.txt'
-relationPath = dataPath + 'tasks/' + relation + '/' + 'train_pos'
+graphpath = relation + 'graph.txt'#+ '/' + 'graph.txt'#dataPath + 'tasks/' + 
+relationPath = relation + 'train_pos'#+ '/' + 'train_pos'#dataPath + 'tasks/' + 
 
 class SupervisedPolicy(object):
 	"""docstring for SupervisedPolicy"""

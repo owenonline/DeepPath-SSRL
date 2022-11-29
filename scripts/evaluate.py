@@ -8,11 +8,12 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation
 
 relation = sys.argv[1]
+dataset = sys.argv[2]
 
-dataPath_ = '../NELL-995/tasks/'  + relation
+dataPath_ = relation#'../NELL-995/tasks/'  + 
 featurePath = dataPath_ + '/path_to_use.txt'
 feature_stats = dataPath_ + '/path_stats.txt'
-relationId_path = '../NELL-995/relation2id.txt'
+relationId_path = '../{}/relation2id.txt'.format(dataset)
 
 def train(kb, kb_inv, named_paths):
 	f = open(dataPath_ + '/train.pairs')
