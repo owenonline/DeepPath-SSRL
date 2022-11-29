@@ -16,8 +16,8 @@ tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
 task = sys.argv[2]
-graphpath = relation + '/' + 'graph.txt'#dataPath + 'tasks/' + 
-relationPath = relation + '/' + 'train_pos'#dataPath + 'tasks/' + 
+graphpath = relation + 'graph.txt'#dataPath + 'tasks/' + # + '/'
+relationPath = relation + 'train_pos'#dataPath + 'tasks/' + # + '/'
 
 class PolicyNetwork(object):
 

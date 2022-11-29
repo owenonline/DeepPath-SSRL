@@ -1,4 +1,3 @@
-import cPickle
 import sys
 import numpy as np
 
@@ -9,7 +8,7 @@ dataPath_ = relation#'../NELL-995/tasks/'  +
 
 ent_id_path = '../{}/'.format(dataset) + 'entity2id.txt'
 rel_id_path = '../{}/'.format(dataset) + 'relation2id.txt'
-test_data_path = relation + '/sort_test.pairs' # '../NELL-995/tasks/' + 
+test_data_path = relation + 'sort_test.pairs' # '../NELL-995/tasks/' + 
 
 f1 = open(ent_id_path)
 f2 = open(rel_id_path)
@@ -25,7 +24,6 @@ for line in content1:
 
 for line in content2:
 	relation2id[line.split()[0]] = int(line.split()[1])
-
 
 ent_vec = np.loadtxt(dataPath_ + '/entity2vec.unif')
 rel_vec = np.loadtxt(dataPath_ + '/relation2vec.unif')

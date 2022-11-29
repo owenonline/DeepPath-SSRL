@@ -11,8 +11,8 @@ relation = sys.argv[1]
 dataset = sys.argv[2]
 
 dataPath_ = relation#'../NELL-995/tasks/'  + 
-featurePath = dataPath_ + '/path_to_use.txt'
-feature_stats = dataPath_ + '/path_stats.txt'
+featurePath = dataPath_ + 'path_to_use.txt'
+feature_stats = dataPath_ + 'path_stats.txt'
 relationId_path = '../{}/relation2id.txt'.format(dataset)
 
 def train(kb, kb_inv, named_paths):
