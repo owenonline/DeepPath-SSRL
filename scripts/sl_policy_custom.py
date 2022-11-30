@@ -86,7 +86,7 @@ def train():
 			print("Episode %d" % episode)
 			print('Training Sample:', train_data[episode%num_samples]) # [:-1])
 
-			env = Env(dataPath, train_data[episode%num_samples])
+			env = Env(dataset + "/", train_data[episode%num_samples])
 			sample = train_data[episode%num_samples].split()
 
 			correct_path = label_gen(sample[0], sample[1], kb, env)

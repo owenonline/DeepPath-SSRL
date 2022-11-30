@@ -63,7 +63,7 @@ def REINFORCE(training_pairs, policy_nn, num_episodes):
 		print('Episode %d' % i_episode)
 		print('Training sample: ', train[i_episode][:-1])
 
-		env = Env(dataPath, train[i_episode])
+		env = Env(dataset + "/", train[i_episode])
 
 		sample = train[i_episode].split()
 		state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
@@ -227,7 +227,7 @@ def test():
 
 		for episode in range(test_num):
 			print('Test sample %d: %s' % (episode,test_data[episode][:-1]))
-			env = Env(dataPath, test_data[episode])
+			env = Env(dataset + "/", test_data[episode])
 			sample = test_data[episode].split()
 			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
 
