@@ -171,7 +171,7 @@ def REINFORCE(training_pairs, policy_nn, num_episodes):
 	relation_path_stats = collections.Counter(path_relation_found).items()
 	relation_path_stats = sorted(relation_path_stats, key = lambda x:x[1], reverse=True)
 
-	f = open(relation + 'path_stats.txt', 'w')
+	f = open(relation + 'path_stats_{}.txt'.format(method), 'w')
 	for item in relation_path_stats:
 		f.write(item[0]+'\t'+str(item[1])+'\n')
 	f.close()
@@ -294,7 +294,7 @@ def test():
 	ranking_path = sorted(ranking_path, key = lambda x:x[1])
 	print('Success persentage:', success/test_num)
 
-	f = open(relation + 'path_to_use.txt', 'w')
+	f = open(relation + 'path_to_use_{}.txt'.format(method), 'w')
 	for item in ranking_path:
 		f.write(item[0] + '\n')
 	f.close()

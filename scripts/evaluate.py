@@ -9,9 +9,10 @@ from keras.layers import Dense, Activation
 
 relation = sys.argv[1]
 dataset = sys.argv[2]
+method = sys.argv[3]
 
-featurePath = relation + 'path_to_use.txt'
-feature_stats = relation + 'path_stats.txt'
+featurePath = relation + 'path_to_use_{}.txt'.format(method)
+feature_stats = relation + 'path_stats_{}.txt'.format(method)
 relationId_path = '{}/relation2id.txt'.format(dataset)
 
 def train(kb, kb_inv, named_paths):

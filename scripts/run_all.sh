@@ -8,8 +8,9 @@ for d in ./$dataset/tasks/*/; do
     if [ $custom == 0 ]
     then
         ./pathfinder.sh $d $dataset
+        ./link_prediction_eval.sh $d $dataset rl
     else
         ./pathfinder_custom.sh $d $dataset
+        ./link_prediction_eval.sh $d $dataset ssrl
     fi
-    ./link_prediction_eval.sh $d $dataset
 done
