@@ -17,6 +17,7 @@ tf.compat.v1.disable_eager_execution()
 relation = sys.argv[1]
 task = sys.argv[2]
 method = sys.argv[3]
+dataset = sys.argv[4]
 graphpath = relation + 'graph.txt'#dataPath + 'tasks/' + # + '/'
 relationPath = relation + 'train_pos'#dataPath + 'tasks/' + # + '/'
 
@@ -190,13 +191,13 @@ def retrain():
 
 	saver = tf.compat.v1.train.Saver()
 	with tf.compat.v1.Session() as sess:
-		saver.restore(sess, 'models/policy_supervised_{}_'.format(method) + relation.split("/")[-2].replace(".","_"))
+		saver.restore(sess, 'models/policy_supervised_{}_'.format(method) + relation.split("/")[-2].replace(".","_") + "_" + dataset)
 		print("sl_policy restored")
 		episodes = len(training_pairs)
 		if episodes > 300:
 			episodes = 300
 		REINFORCE(training_pairs, policy_network, episodes)
-		saver.save(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2].replace(".","_"))
+		saver.save(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2].replace(".","_") + "_" + dataset)
 	print('Retrained model saved')
 
 def test():
@@ -218,7 +219,7 @@ def test():
 	path_set = set()
 
 	with tf.compat.v1.Session() as sess:
-		saver.restore(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2].replace(".","_"))
+		saver.restore(sess, 'models/policy_retrained_{}_'.format(method) + relation.split("/")[-2].replace(".","_") + "_" + dataset)
 		print('Model reloaded')
 
 		if test_num > 500:

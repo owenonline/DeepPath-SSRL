@@ -15,7 +15,7 @@ import time
 tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
-# episodes = int(sys.argv[2])
+dataset = sys.argv[2]
 graphpath = relation + 'graph.txt'#+ '/' + 'graph.txt'#dataPath + 'tasks/' + 
 relationPath = relation + 'train_pos'#+ '/' + 'train_pos'#dataPath + 'tasks/' + 
 
@@ -88,48 +88,8 @@ def train():
 				state_batch = np.reshape(state_batch, [-1, state_dim])
 				policy_nn.update(state_batch, action_batch)
 
-		saver.save(sess, 'models/policy_supervised_rl_' + relation.split("/")[-2].replace(".","_"))
-		print("model saved at models/policy_supervised_rl_" + relation.split("/")[-2].replace(".","_"))
-
-
-def test(test_episodes):
-	tf.compat.v1.reset_default_graph()
-	policy_nn = SupervisedPolicy()
-
-	f = open(relationPath)
-	test_data = f.readlines()
-	f.close()
-
-	test_num = len(test_data)
-
-	test_data = test_data[-test_episodes:]
-	print(len(test_data))
-	
-	success = 0
-
-	saver = tf.compat.v1.train.Saver()
-	with tf.compat.v1.Session() as sess:
-		saver.restore(sess, 'models/policy_supervised_'+ relation)
-		print('Model reloaded')
-		for episode in range(len(test_data)):
-			print('Test sample %d: %s' % (episode,test_data[episode][:-1]))
-			env = Env(dataPath, test_data[episode])
-			sample = test_data[episode].split()
-			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
-			for t in count():
-				state_vec = env.idx_state(state_idx)
-				action_probs = policy_nn.predict(state_vec)
-				action_chosen = np.random.choice(np.arange(action_space), p = np.squeeze(action_probs))
-				reward, new_state, done = env.interact(state_idx, action_chosen)
-				if done or t == max_steps_test:
-					if done:
-						print('Success')
-						success += 1
-					print('Episode ends\n')
-					break
-				state_idx = new_state
-
-	print('Success persentage:', success/test_episodes)
+		saver.save(sess, 'models/policy_supervised_rl_' + relation.split("/")[-2].replace(".","_") + "_" + dataset)
+		print("model saved at models/policy_supervised_rl_" + relation.split("/")[-2].replace(".","_") + "_" + dataset)
 
 if __name__ == "__main__":
 	train()

@@ -16,6 +16,7 @@ import time
 tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
+dataset = sys.argv[2]
 # episodes = int(sys.argv[2])
 graphpath = relation + 'graph.txt'#dataPath + 'tasks/' + #+ '/'
 relationPath = relation + 'train_pos'#dataPath + 'tasks/' + #+ '/'
@@ -136,8 +137,8 @@ def train():
 					break
 				last_state_idx = state_idx
 				state_idx = new_state
-		saver.save(sess, 'models/policy_supervised_ssrl_' + relation.split("/")[-2].replace(".","_"))
-		print("model saved at models/policy_supervised_ssrl_" + relation.split("/")[-2].replace(".","_"))
+		saver.save(sess, 'models/policy_supervised_ssrl_' + relation.split("/")[-2].replace(".","_") + "_" + dataset)
+		print("model saved at models/policy_supervised_ssrl_" + relation.split("/")[-2].replace(".","_") + "_" + dataset)
 
 if __name__ == "__main__":
 	train()
