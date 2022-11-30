@@ -38,7 +38,7 @@ def train(kb, kb_inv, named_paths):
 	input_dim = len(named_paths)
 	model.add(Dense(1, activation='sigmoid' ,input_dim=input_dim))
 	model.compile(optimizer = 'rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-	model.fit(training_features, train_labels, nb_epoch=300, batch_size=128)
+	model.fit(training_features, train_labels, epochs=300, batch_size=128)
 	return model
 
 def get_features():
