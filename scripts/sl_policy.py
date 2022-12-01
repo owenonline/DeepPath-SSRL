@@ -16,6 +16,12 @@ tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
 dataset = sys.argv[2]
+
+if dataset == "FB15k-237":
+	action_space = 474
+elif dataset == "NELL-995":
+	action_space = 400
+
 graphpath = relation + 'graph.txt'#+ '/' + 'graph.txt'#dataPath + 'tasks/' + 
 relationPath = relation + 'train_pos'#+ '/' + 'train_pos'#dataPath + 'tasks/' + 
 

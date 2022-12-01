@@ -21,6 +21,11 @@ dataset = sys.argv[4]
 graphpath = relation + 'graph.txt'#dataPath + 'tasks/' + # + '/'
 relationPath = relation + 'train_pos'#dataPath + 'tasks/' + # + '/'
 
+if dataset == "FB15k-237":
+	action_space = 474
+elif dataset == "NELL-995":
+	action_space = 400
+
 class PolicyNetwork(object):
 
 	def __init__(self, scope = 'policy_network', learning_rate = 0.001):

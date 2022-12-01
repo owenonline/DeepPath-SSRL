@@ -21,6 +21,11 @@ dataset = sys.argv[2]
 graphpath = relation + 'graph.txt'#dataPath + 'tasks/' + #+ '/'
 relationPath = relation + 'train_pos'#dataPath + 'tasks/' + #+ '/'
 
+if dataset == "FB15k-237":
+	action_space = 474
+elif dataset == "NELL-995":
+	action_space = 400
+
 class SupervisedPolicy(object):
 	"""docstring for SupervisedPolicy"""
 	def __init__(self, learning_rate = 0.001):

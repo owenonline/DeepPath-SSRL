@@ -12,7 +12,7 @@ correct = {}
 
 # hyperparameters
 state_dim = 200
-action_space = 474#400
+# action_space = 474#400
 eps_start = 1
 eps_end = 0.1
 epe_decay = 1000
