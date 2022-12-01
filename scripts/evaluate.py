@@ -122,9 +122,9 @@ def evaluate_logic():
 	# queries = set()
 	for line in test_data:
 		e1 = line.split(',')[0].replace('thing$','')
-		# e1 = '/' + e1[0] + '/' + e1[2:]
+		e1 = '/' + e1[0] + '/' + e1[2:]
 		e2 = line.split(',')[1].split(':')[0].replace('thing$','')
-		# e2 = '/' + e2[0] + '/' + e2[2:]
+		e2 = '/' + e2[0] + '/' + e2[2:]
 		if (e1 not in kb.entities) or (e2 not in kb.entities):
 			continue
 		test_pairs.append((e1,e2))
