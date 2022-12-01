@@ -23,7 +23,9 @@ def train(kb, kb_inv, named_paths):
 	train_labels = []
 	for line in train_data:
 		e1 = line.split(',')[0].replace('thing$','')
+		e1 = '/' + e1[0] + '/' + e1[2:]
 		e2 = line.split(',')[1].split(':')[0].replace('thing$','')
+		e2 = '/' + e2[0] + '/' + e2[2:]
 		if (e1 not in kb.entities) or (e2 not in kb.entities):
 			continue
 		train_pairs.append((e1,e2))
