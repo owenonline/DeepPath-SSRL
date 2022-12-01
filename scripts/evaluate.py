@@ -155,7 +155,7 @@ def evaluate_logic():
 			y_true.append(test_labels[idx])
 		else:
 			query = sample[0]
-			count = zip(y_score, y_true)
+			count = list(zip(y_score, y_true))
 			count.sort(key = lambda x:x[0], reverse=True)
 			ranks = []
 			correct = 0
