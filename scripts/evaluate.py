@@ -39,6 +39,9 @@ def train(kb, kb_inv, named_paths):
 	input_dim = len(named_paths)
 	model.add(Dense(1, activation='sigmoid' ,input_dim=input_dim))
 	model.compile(optimizer = 'rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+	print("length of training features and labels")
+	print(len(training_features))
+	print(len(train_labels))
 	model.fit(np.array(training_features), np.array(train_labels), epochs=300, batch_size=128)
 	return model
 
@@ -86,6 +89,7 @@ def get_features():
 			named_paths.append(pathName)
 
 	print('How many paths used: ', len(useful_paths))
+	print('How many named paths: ', len(named_paths))
 	return useful_paths, named_paths
 
 def evaluate_logic():
