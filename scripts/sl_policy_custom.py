@@ -76,7 +76,6 @@ def train():
 	for line in content:
 		ent1, rel, ent2 = line.rsplit()
 		kb.addRelation(ent1, rel, ent2)
-		print(ent1)
 
 	num_samples = len(train_data)
 	success = 0
@@ -95,7 +94,11 @@ def train():
 			env = Env(dataset + "/", train_data[episode%num_samples])
 			sample = train_data[episode%num_samples].split()
 
-			correct_path = label_gen(sample[0], sample[1], kb, env)
+			try:
+				correct_path = label_gen(sample[0], sample[1], kb, env)
+			except:
+				print("Requested entity not present in relation graph, continuing to next training sample")
+				continue
 
 			last_step = ("N/A",)
 			state_idx = [env.entity2id_[sample[0]], env.entity2id_[sample[1]], 0]
