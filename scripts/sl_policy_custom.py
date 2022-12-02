@@ -76,6 +76,7 @@ def train():
 	for line in content:
 		ent1, rel, ent2 = line.rsplit()
 		kb.addRelation(ent1, rel, ent2)
+		print(ent1)
 
 	num_samples = len(train_data)
 	success = 0

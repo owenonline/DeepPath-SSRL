@@ -114,7 +114,6 @@ def evaluate_logic():
 
 	model = train(kb, kb_inv, named_paths)
 
-
 	f = open(relation + 'sort_test.pairs')
 	test_data = f.readlines()
 	f.close()
