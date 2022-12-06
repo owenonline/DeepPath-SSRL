@@ -13,6 +13,8 @@ from BFS.KB import KB
 from BFS.BFS import BFS
 import time
 
+AGENT_CHOICE = False
+
 tf.compat.v1.disable_eager_execution()
 
 relation = sys.argv[1]
@@ -132,7 +134,10 @@ def train():
 				normalized_probs = normalize(action_prob, norm="l1")[0]
 
 				# select action based on agent output
-				action_chosen = int(np.random.choice(np.arange(action_space), 1, p=normalized_probs))
+				if AGENT_CHOICE:
+					action_chosen = int(np.random.choice(np.arange(action_space), 1, p=normalized_probs))
+				else:
+					action_chosen = int(np.random.choice(np.arange(action_space), 1, p=correct))
 				last_step = tuple(list(last_step) + [action_chosen])
 				
 				_, new_state, done = env.interact(state_idx, action_chosen)
